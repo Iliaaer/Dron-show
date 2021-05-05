@@ -1,0 +1,118 @@
+#!/bin/bash
+
+IMAGE_NAME=goldarte/clever-show-ds
+DEFAULT_ID=1
+DEFAULT_PORT=14560
+DEFAULT_DX=0
+DEFAULT_DY=0
+ID=$DEFAULT_ID
+CONTAINER_NAME=sim-$DEFAULT_ID
+PORT=$DEFAULT_PORT
+DX=$DEFAULT_DX
+DY=$DEFAULT_DY
+
+function usage()
+{
+    echo ""
+    echo "Script for running docker image $IMAGE_NAME"
+    echo "Usage: ./run [options]"
+    echo "Options:"
+    echo -e "  -h --help \t\tPrint this message"
+    echo -e "  -i --id=ID \t\tID of simulated copter. Used as MAV_SYS_ID."
+    echo -e "\t\t\tContainer name and hostname are set to sim-<ID> (default: $DEFAULT_ID)"
+    echo -e "  -p --port=PORT \tInitial UDP port (default: $DEFAULT_PORT)"
+    echo -e "\t\t\tUDP listening port for simulator data is set to <PORT>+<ID>"
+    echo -e "  --headless \t\tSet this option to run lightweight jmavsim simulator directly in container"
+    echo -e "  --lat=LATITUDE \tSet initial latitude"
+    echo -e "  --lon=LONGITUDE \tSet initial longitude"
+    echo -e "  --dx=DX \t\tSet dx shift in meters to East (default: $DEFAULT_DX)"
+    echo -e "  --dy=DY \t\tSet dy shift in meters to North (default: $DEFAULT_DY)"
+    echo "See defaults for initial latitude and longitude here:"
+    echo "https://github.com/goldarte/clover-ds/blob/master/scripts/calculate_gps.py#L7"
+    echo ""
+}
+
+while [ "$1" != "" ]; do
+    PARAM=`echo $1 | awk -F= '{print $1}'`
+    VALUE=`echo $1 | awk -F= '{print $2}'`
+    case $PARAM in
+        -h | --help)
+            usage
+            exit
+            ;;
+        -i | --id)
+            ID=$VALUE
+            CONTAINER_NAME=sim-$VALUE
+            ;;
+        -p | --port)
+            PORT=$VALUE
+            ;;
+        --headless)
+            HEADLESS=1
+            ;;
+        --lat)
+            LAT=$VALUE
+            ;;
+        --lon)
+            LON=$VALUE
+            ;;
+        --dx)
+            DX=$VALUE
+            ;;
+        --dy)
+            DY=$VALUE
+            ;;
+        *)
+            echo "ERROR: unknown parameter \"$PARAM\""
+            usage
+            exit 1
+            ;;
+    esac
+    shift
+done
+
+echo -e "\nRun image $IMAGE_NAME with name and hostname $CONTAINER_NAME"
+
+CMD1="docker run \
+    -d \
+    -it \
+    --rm \
+    --name $CONTAINER_NAME \
+    --hostname $CONTAINER_NAME \
+    --tmpfs /tmp \
+    --tmpfs /run \
+    --tmpfs /run/lock \
+    -v /sys/fs/cgroup:/sys/fs/cgroup:ro \
+    -e DX=$DX \
+    -e DY=$DY \
+    -e MAV_SYS_ID=$ID "
+CMD2="-e LAT=$LAT "
+CMD3="-e LON=$LON "
+CMD4="-p $((PORT+ID)):14560/udp "
+CMD5="-e HEADLESS=$HEADLESS "
+CMD6="$IMAGE_NAME"
+
+CMD=$CMD1
+
+if [ ! -z $LAT ]; then
+    CMD=$CMD$CMD2
+fi
+
+if [ ! -z $LON ]; then
+    CMD=$CMD$CMD3
+fi
+
+if [ -z $HEADLESS ]
+then
+    CMD=$CMD$CMD4$CMD6
+    echo -e "Listening UDP port on host machine for simulator data is $((PORT+ID))"
+else
+    CMD=$CMD$CMD5$CMD6
+    echo -e "Running in HEADLESS mode"
+fi
+
+echo -e "MAV_SYS_ID is set to $ID\n"
+
+# echo -e "Command:\n$CMD\n"
+
+eval $CMD
