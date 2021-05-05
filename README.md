@@ -2,28 +2,6 @@
 
 Software kit for multiple Clover drones simulation. Each simulated drone contains roscore, clever, sitl and clever-show services running inside.
 
-You can choose [jMAVSim](https://dev.px4.io/v1.8.2/en/simulation/jmavsim.html) or [Gazebo](https://dev.px4.io/v1.8.2/en/simulation/gazebo.html) as a simulator and generate as many drones in a group as you want (as long as there is enough performance).
-
-Each drone is simulated as docker container and includes:
-
-* [px4 toolchain for simulation](https://dev.px4.io/v1.9.0/en/setup/dev_env.html)
-* px4 sitl binary with version [v1.8.2-clever.10](https://github.com/CopterExpress/Firmware/releases/tag/v1.8.2-clever.10)
-* [ROS Melodic](http://wiki.ros.org/melodic)
-* [jMAVSim](https://github.com/PX4/jMAVSim) lightweight simulator
-* [clover](https://github.com/CopterExpress/clever) ROS package
-* [clever-show](https://github.com/CopterExpress/clever-show) software
-* [roscore](https://github.com/goldarte/clover-ds/tree/master/services/roscore.service) service
-* [clover](https://github.com/goldarte/clover-ds/tree/master/services/clover.service) service
-* [sitl](https://github.com/goldarte/clover-ds/tree/master/services/sitl.service) service
-* [clever-show](services/clever-show.service) service
-* [jmavsim](https://github.com/goldarte/clover-ds/tree/master/services/jmavsim.service) service
-
-## Requirements
-
-### Simulate copters with jMAVSim
-
-* Ubuntu 18.04
-* docker ([install instruction](https://docs.docker.com/get-docker/))
 
 ### Simulate copters in Gazebo
 
@@ -36,29 +14,17 @@ Each drone is simulated as docker container and includes:
 Clone this repository, cd into it and pull docker image:
 
 ```cmd
-git clone https://github.com/CopterExpress/clever-show-ds.git
+git clone https://github.com/Iliaaer/Dron-show/.git
 cd <cloned repo>
 docker pull goldarte/clever-show-ds
 ```
 
-## Simulate multiple copters with jMAVSim
-
-Launch 5 px4 copters with simulated companion computers and simulation data inside:
-
-```cmd
-python simulate.py -n 5 --headless
-```
-
-In this case there will be no visualization of copters because each simulated copter has its own lightweight simulator inside. Also, generated copters won't know anything about their collisions because each copter has its own simulated world inside.
-
-You can visualize telemetry data of generated copters on the map in [QGroundControl](#manage-copters-from-qgroundcontrol).
-
 ## Simulate multiple copters in Gazebo
 
-Launch Gazebo simulator with empty world and generate 5 px4 copters with simulated companion computers:
+Launch Gazebo simulator with empty world and generate 2 px4 copters with simulated companion computers:
 
 ```cmd
-python simulate.py -n 5
+python simulate.py -n 2
 ```
 
 ![5 generated copters in Gazebo](docs/assets/copters-landed.png)
@@ -94,18 +60,6 @@ optional arguments:
                         square.
   --headless            Set this option to run internal lightweight simulation.
 ```
-
-## Manage copters from QGroundControl
-
-All telemetry from copters is passed to 14550 UDP port. You can run QGroundControl with default settings and see the telemetry from all generated copters:
-
-![Telemetry data in QGC](docs/assets/copters-qgc.png)
-
-> To differentiate copters in QGroundControl visualization, you should increase distance between them because of enormous size of the position arrow:
->
-> ```cmd
-> python simulate.py -n 5 -d 10 --headless
-> ```
 
 ## Simulate drone show
 
