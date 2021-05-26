@@ -10,13 +10,6 @@ try:
 except ImportError:
     roslaunch_imported = False
 
-xyCopterIndex = {
-    1: (0, 0),
-    2: (0.8, 0),
-    3: (1.6, 0),
-    4: (0, 0.8),
-    5: (0, 1.6)
-    }
 
 
 current_path = os.path.dirname(os.path.realpath(__file__))
@@ -27,6 +20,22 @@ spawn_launch = os.path.join(gazebo_path,'single_vehicle_spawn.launch')
 gazebo_launch = os.path.join(gazebo_path,'gazebo.launch')
 gazebo_plugins_dir = os.path.join(gazebo_path, 'plugins/')
 gazebo_models_dir = os.path.join(gazebo_path, 'models/')
+spawn_copters_dir = gazebo_path = os.path.join(current_path, 'spawn_copters.txt')
+
+aruco_map_dir = os.path.join(gazebo_models_dir,'aruco_map.txt')
+aruco_map = {}
+for l in open(aruco_map_dir):
+    line = l.split('\t')
+    if line[0] != '# id':
+        aruco_map[int(line[0])] = (float(line[2]), float(line[3]))
+aruco_map = sorted(aruco_map.items(), key=lambda x:x[1])
+aruco_map_dict = {aruco_map[i][0]: aruco_map[i][1] for i in range(len(aruco_map))}
+
+spawn_copters = {}
+for l in open(spawn_copters_dir):
+    line = l.replace('\n', '').split()
+    spawn_copters[int(line[0])] = int(line[1])
+
 
 def positive_int(value):
     ivalue = int(value)
@@ -105,11 +114,18 @@ if __name__ == "__main__":
             index = xi + yi*xn + 1
             if index > n:
                 break
-            x = xi*args.dist
-            y = yi*args.dist
-            x = xyCopterIndex[index][0]
-            y = xyCopterIndex[index][1]
-            output += "sim-{} ({}, {})\t".format(index, x, y)
+            
+            aruco = spawn_copters.get(index)
+            x, y = aruco_map_dict[aruco] if aruco != None else (0, 0)
+            if aruco == None:
+                position = aruco_map[index-1]
+                aruco = position[0]
+                x, y = positive_ition[1]
+            
+            #x = xi*args.dist
+            #y = yi*args.dist
+                
+            output += "sim-{} ({} {}, {})\t".format(index, aruco, x, y)
             subprocess.call("{} -i={} -p={}".format(run, index, port), shell=True)
             subprocess.call("roslaunch {} ID:={} port:={} x:={} y:={}".format(spawn_launch, index, port+index, x, y), shell=True)
         output += "\n"
