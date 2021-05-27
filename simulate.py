@@ -16,13 +16,14 @@ current_path = os.path.dirname(os.path.realpath(__file__))
 gazebo_path = os.path.join(current_path, 'gazebo/')
 
 run = os.path.join(current_path,"run")
+spawn_clever = os.path.join()
 spawn_launch = os.path.join(gazebo_path,'single_vehicle_spawn.launch')
 gazebo_launch = os.path.join(gazebo_path,'gazebo.launch')
 gazebo_plugins_dir = os.path.join(gazebo_path, 'plugins/')
 gazebo_models_dir = os.path.join(gazebo_path, 'models/')
 spawn_copters_dir = gazebo_path = os.path.join(current_path, 'spawn_copters.txt')
-
 aruco_map_dir = os.path.join(gazebo_models_dir,'aruco_map.txt')
+
 aruco_map = {}
 for l in open(aruco_map_dir):
     line = l.split('\t')
@@ -72,10 +73,6 @@ if __name__ == "__main__":
                         help="Number of copters to simulate. Default is 1.")
     parser.add_argument('-p','--port', type=positive_int, default='14601',
                         help="UDP port for simulation data of the first copter. Default is 14601. UDP port for n-th copter will be equal to <port> + n - 1. This parameter is used only in non headless mode.")
-    parser.add_argument('-d','--dist', type=positive_float, default='1',
-                        help="Distance between generated copters in meters. Default is 1. The generated copters will be arranged as a 2D array along East and North axes in a shape close to square.")
-    parser.add_argument('--headless', action='store_true',
-                        help="Set this option to run internal lightweight simulation.")
     args = parser.parse_args()
 
     port = args.port - 1
@@ -85,7 +82,7 @@ if __name__ == "__main__":
     xn = int(math.ceil(math.sqrt(n)))
     yn = int(math.ceil(n/xn))
     n = int(n)
-    print("{} copters will be arranged to 2D array with xn = {}, yn = {}".format(args.number, xn, yn))
+    print("{} copters will be arranged to 2D array".format(args.number))
 
     output = "\nGenerated copters:\n"
 
@@ -122,8 +119,6 @@ if __name__ == "__main__":
                 aruco = position[0]
                 x, y = positive_ition[1]
             
-            #x = xi*args.dist
-            #y = yi*args.dist
                 
             output += "sim-{} ({} {}, {})\t".format(index, aruco, x, y)
             subprocess.call("{} -i={} -p={}".format(run, index, port), shell=True)
